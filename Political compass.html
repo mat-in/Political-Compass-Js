@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Political Compass Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        #question-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        #question-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        #question-priority {
+            font-style: italic;
+            color: #666;
+        }
+
+        #button-container {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #results-container {
+            text-align: center;
+        }
+
+        #compass-chart {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        #scores {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        #scores p {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Political Compass Quiz</h1>
+        <div id="quiz-container">
+            <div id="question-container">
+                <p id="question-text"></p>
+                <p id="question-priority"></p>
+            </div>
+            <div id="button-container">
+                <button id="yes-button">Yes</button>
+                <button id="no-button">No</button>
+            </div>
+        </div>
+        <div id="results-container" style="display: none;">
+            <h2>Your Results</h2>
+            <canvas id="compass-chart"></canvas>
+            <div id="scores">
+                <p>Left Score: <span id="left-score"></span></p>
+                <p>Right Score: <span id="right-score"></span></p>
+                <p>Liberal Score: <span id="liberal-score"></span></p>
+                <p>Non-Liberal Score: <span id="non-liberal-score"></span></p>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const questions = {
+            "Left": [
+                ["Do you support higher taxes on the wealthy to fund social welfare programs?", 3],
+                ["Should there be stronger protections for workers' rights and labor unions?", 2],
+                ["Do you support progressive taxation, where the rich pay a higher percentage of their income in taxes?", 4],
+                ["Should the government regulate and provide more services in healthcare and education?", 1],
+                ["Do you believe in a higher minimum wage to ensure a living wage for workers?", 2]
+            ],
+            "Right": [
+                ["Do you believe in lower taxes and fewer regulations to stimulate economic growth?", 3],
+                ["Should businesses have more flexibility in hiring and firing employees without interference from the government?", 2],
+                ["Do you support a free-market approach to setting wages without government intervention?", 3],
+                ["Should the government reduce its involvement in healthcare and education, leaving it to the private sector?", 1],
+                ["Do you believe in a flat tax system where everyone pays the same percentage of their income in taxes?", 4]
+            ],
+            "Liberal": [
+                ["Do you support marriage equality for same-sex couples?", 3],
+                ["Should there be stricter gun control laws to reduce gun violence?", 4],
+                ["Do you support affirmative action policies to address historical discrimination and promote diversity?", 3],
+                ["Should the government invest more in renewable energy and take action to combat climate change?", 2],
+                ["Do you believe in comprehensive immigration reform with a pathway to citizenship for undocumented immigrants?", 1]
+            ],
+            "Non-Liberal": [
+                ["Do you believe in traditional marriage between one man and one woman?", 4],
+                ["Should individuals have the right to own and carry firearms for self-defense?", 3],
+                ["Do you oppose affirmative action policies and believe in a merit-based approach to opportunities?", 4],
+                ["Should the government prioritize traditional energy sources like coal and oil over renewable energy?", 2],
+                ["Do you support stricter immigration policies and border security measures?", 1]
+            ]
+        };
+
+        let currentQuestionIndex = 0;
+        let currentCategory = Object.keys(questions)[0];
+        let scores = {
+            "Left": 0,
+            "Right": 0,
+            "Liberal": 0,
+            "Non-Liberal": 0
+        };
+
+        function displayQuestion() {
+            const questionText = document.getElementById('question-text');
+            const questionPriority = document.getElementById('question-priority');
+            
+            if (currentQuestionIndex < questions[currentCategory].length) {
+                const [question, priority] = questions[currentCategory][currentQuestionIndex];
+                questionText.textContent = question;
+                questionPriority.textContent = `Priority: ${priority}`;
+            } else {
+                if (Object.keys(questions).indexOf(currentCategory) < Object.keys(questions).length - 1) {
+                    currentCategory = Object.keys(questions)[Object.keys(questions).indexOf(currentCategory) + 1];
+                    currentQuestionIndex = 0;
+                    displayQuestion();
+                } else {
+                    showResults();
+                }
+            }
+        }
+
+        function answerQuestion(answer) {
+            const [, priority] = questions[currentCategory][currentQuestionIndex];
+            if (answer === 'yes') {
+                scores[currentCategory] += priority;
+            }
+            currentQuestionIndex++;
+            displayQuestion();
+        }
+
+        document.getElementById('yes-button').addEventListener('click', () => answerQuestion('yes'));
+        document.getElementById('no-button').addEventListener('click', () => answerQuestion('no'));
+
+        function showResults() {
+            document.getElementById('quiz-container').style.display = 'none';
+            document.getElementById('results-container').style.display = 'block';
+            
+            document.getElementById('left-score').textContent = scores['Left'];
+            document.getElementById('right-score').textContent = scores['Right'];
+            document.getElementById('liberal-score').textContent = scores['Liberal'];
+            document.getElementById('non-liberal-score').textContent = scores['Non-Liberal'];
+            
+            const x = scores['Right'] - scores['Left'];
+            const y = scores['Liberal'] - scores['Non-Liberal'];
+            
+            const ctx = document.getElementById('compass-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Your Position',
+                        data: [{x: x, y: y}],
+                        backgroundColor: 'red'
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'center',
+                            min: -15,
+                            max: 15,
+                            title: {
+                                display: true,
+                                text: 'Economic Left/Right'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'center',
+                            min: -15,
+                            max: 15,
+                            title: {
+                                display: true,
+                                text: 'Authoritarian/Libertarian'
+                            }
+                        }
+                    },
+                    plugins: {
+                        annotation: {
+                            annotations: {
+                                quadrants: [{
+                                    type: 'box',
+                                    xMin: -15,
+                                    xMax: 0,
+                                    yMin: 0,
+                                    yMax: 15,
+                                    backgroundColor: 'rgba(255, 99, 132, 0.25)'
+                                }, {
+                                    type: 'box',
+                                    xMin: 0,
+                                    xMax: 15,
+                                    yMin: 0,
+                                    yMax: 15,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.25)'
+                                }, {
+                                    type: 'box',
+                                    xMin: -15,
+                                    xMax: 0,
+                                    yMin: -15,
+                                    yMax: 0,
+                                    backgroundColor: 'rgba(75, 192, 192, 0.25)'
+                                }, {
+                                    type: 'box',
+                                    xMin: 0,
+                                    xMax: 15,
+                                    yMin: -15,
+                                    yMax: 0,
+                                    backgroundColor: 'rgba(255, 206, 86, 0.25)'
+                                }]
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        displayQuestion();
+    </script>
+</body>
+</html>
